@@ -59,27 +59,15 @@
 
 // Pugl data
 struct ImGui_ImplPugl_Data {
-  // PuglWorld*              World;
   PuglView* View = nullptr;
   double Time = 0.0;
-  PuglView* MouseView;
-  // GLFWcursor*             MouseCursors[ImGuiMouseCursor_COUNT];
+  PuglView* MouseView = nullptr;
   ImVec2 LastValidMousePos = {0, 0};
   bool InstalledEventFunc = false;
   bool CallbacksChainForAllWindows = false;
-
   PuglEventFunc PrevEventFunc = nullptr;
-  // Chain GLFW callbacks: our callbacks will call the user's previously installed callbacks, if any.
-  // GLFWwindowfocusfun      PrevUserCallbackWindowFocus;
-  // GLFWcursorposfun        PrevUserCallbackCursorPos;
-  // GLFWcursorenterfun      PrevUserCallbackCursorEnter;
-  // GLFWmousebuttonfun      PrevUserCallbackMousebutton;
-  // GLFWscrollfun           PrevUserCallbackScroll;
-  // GLFWkeyfun              PrevUserCallbackKey;
-  // GLFWcharfun             PrevUserCallbackChar;
-  // GLFWmonitorfun          PrevUserCallbackMonitor;
 
-  ImGui_ImplPugl_Data() { memset((void*)this, 0, sizeof(*this)); }  // TODO remove the c style memset or keep it?
+  ImGui_ImplPugl_Data() = default;
 };
 
 // Backend data stored in io.BackendPlatformUserData to allow support for multiple Dear ImGui contexts
@@ -95,245 +83,267 @@ static bool ImGui_ImplPugl_ShouldChainCallback(PuglView* view) {
   return bd->CallbacksChainForAllWindows ? true : (view == bd->View);
 }
 
-// // Not static to allow third-party code to use that if they want to (but undocumented)
-// ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int keycode, int scancode);
-ImGuiKey ImGui_ImplPugl_KeyToImGuiKey(int keycode, int scancode)
-{
-    IM_UNUSED(scancode);
-    switch (keycode)
-    {
-        case PUGL_KEY_TAB: return ImGuiKey_Tab;
-        case PUGL_KEY_LEFT: return ImGuiKey_LeftArrow;
-        case PUGL_KEY_RIGHT: return ImGuiKey_RightArrow;
-        case PUGL_KEY_UP: return ImGuiKey_UpArrow;
-        case PUGL_KEY_DOWN: return ImGuiKey_DownArrow;
-        case PUGL_KEY_PAGE_UP: return ImGuiKey_PageUp;
-        case PUGL_KEY_PAGE_DOWN: return ImGuiKey_PageDown;
-        case PUGL_KEY_HOME: return ImGuiKey_Home;
-        case PUGL_KEY_END: return ImGuiKey_End;
-        case PUGL_KEY_INSERT: return ImGuiKey_Insert;
-        case PUGL_KEY_DELETE: return ImGuiKey_Delete;
-        case PUGL_KEY_BACKSPACE: return ImGuiKey_Backspace;
-        case PUGL_KEY_SPACE: return ImGuiKey_Space;
-        case PUGL_KEY_ENTER: return ImGuiKey_Enter;
-        case PUGL_KEY_ESCAPE: return ImGuiKey_Escape;
-        case '\'': return ImGuiKey_Apostrophe;
-        case ',': return ImGuiKey_Comma;
-        case '-': return ImGuiKey_Minus;
-        case '.': return ImGuiKey_Period;
-        case '/': return ImGuiKey_Slash;
-        case ';': return ImGuiKey_Semicolon;
-        case '=': return ImGuiKey_Equal;
-        case '[': return ImGuiKey_LeftBracket;
-        case '\\': return ImGuiKey_Backslash;
-        case ']': return ImGuiKey_RightBracket;
-        case 0x60: return ImGuiKey_GraveAccent;
-        case 0xFFFF: return ImGuiKey_GraveAccent;
-        case PUGL_KEY_CAPS_LOCK: return ImGuiKey_CapsLock;
-        case PUGL_KEY_SCROLL_LOCK: return ImGuiKey_ScrollLock;
-        case PUGL_KEY_NUM_LOCK: return ImGuiKey_NumLock;
-        case PUGL_KEY_PRINT_SCREEN: return ImGuiKey_PrintScreen;
-        case PUGL_KEY_PAUSE: return ImGuiKey_Pause;
-        case PUGL_KEY_PAD_0: return ImGuiKey_Keypad0;
-        case PUGL_KEY_PAD_1: return ImGuiKey_Keypad1;
-        case PUGL_KEY_PAD_2: return ImGuiKey_Keypad2;
-        case PUGL_KEY_PAD_3: return ImGuiKey_Keypad3;
-        case PUGL_KEY_PAD_4: return ImGuiKey_Keypad4;
-        case PUGL_KEY_PAD_5: return ImGuiKey_Keypad5;
-        case PUGL_KEY_PAD_6: return ImGuiKey_Keypad6;
-        case PUGL_KEY_PAD_7: return ImGuiKey_Keypad7;
-        case PUGL_KEY_PAD_8: return ImGuiKey_Keypad8;
-        case PUGL_KEY_PAD_9: return ImGuiKey_Keypad9;
-        case PUGL_KEY_PAD_DECIMAL: return ImGuiKey_KeypadDecimal;
-        case PUGL_KEY_PAD_DIVIDE: return ImGuiKey_KeypadDivide;
-        case PUGL_KEY_PAD_MULTIPLY: return ImGuiKey_KeypadMultiply;
-        case PUGL_KEY_PAD_SUBTRACT: return ImGuiKey_KeypadSubtract;
-        case PUGL_KEY_PAD_ADD: return ImGuiKey_KeypadAdd;
-        case PUGL_KEY_PAD_ENTER: return ImGuiKey_KeypadEnter;
-        case PUGL_KEY_PAD_EQUAL: return ImGuiKey_KeypadEqual;
-        case PUGL_KEY_SHIFT_L: return ImGuiKey_LeftShift;
-        case PUGL_KEY_CTRL_L: return ImGuiKey_LeftCtrl;
-        case PUGL_KEY_ALT_L: return ImGuiKey_LeftAlt;
-        case PUGL_KEY_SUPER_L: return ImGuiKey_LeftSuper;
-        case PUGL_KEY_SHIFT_R: return ImGuiKey_RightShift;
-        case PUGL_KEY_CTRL_R: return ImGuiKey_RightCtrl;
-        case PUGL_KEY_ALT_R: return ImGuiKey_RightAlt;
-        case PUGL_KEY_SUPER_R: return ImGuiKey_RightSuper;
-        case PUGL_KEY_MENU: return ImGuiKey_Menu;
-        case '0': return ImGuiKey_0;
-        case '1': return ImGuiKey_1;
-        case '2': return ImGuiKey_2;
-        case '3': return ImGuiKey_3;
-        case '4': return ImGuiKey_4;
-        case '5': return ImGuiKey_5;
-        case '6': return ImGuiKey_6;
-        case '7': return ImGuiKey_7;
-        case '8': return ImGuiKey_8;
-        case '9': return ImGuiKey_9;
-        case 'A': return ImGuiKey_A;
-        case 'B': return ImGuiKey_B;
-        case 'C': return ImGuiKey_C;
-        case 'D': return ImGuiKey_D;
-        case 'E': return ImGuiKey_E;
-        case 'F': return ImGuiKey_F;
-        case 'G': return ImGuiKey_G;
-        case 'H': return ImGuiKey_H;
-        case 'I': return ImGuiKey_I;
-        case 'J': return ImGuiKey_J;
-        case 'K': return ImGuiKey_K;
-        case 'L': return ImGuiKey_L;
-        case 'M': return ImGuiKey_M;
-        case 'N': return ImGuiKey_N;
-        case 'O': return ImGuiKey_O;
-        case 'P': return ImGuiKey_P;
-        case 'Q': return ImGuiKey_Q;
-        case 'R': return ImGuiKey_R;
-        case 'S': return ImGuiKey_S;
-        case 'T': return ImGuiKey_T;
-        case 'U': return ImGuiKey_U;
-        case 'V': return ImGuiKey_V;
-        case 'W': return ImGuiKey_W;
-        case 'X': return ImGuiKey_X;
-        case 'Y': return ImGuiKey_Y;
-        case 'Z': return ImGuiKey_Z;
-        case PUGL_KEY_F1: return ImGuiKey_F1;
-        case PUGL_KEY_F2: return ImGuiKey_F2;
-        case PUGL_KEY_F3: return ImGuiKey_F3;
-        case PUGL_KEY_F4: return ImGuiKey_F4;
-        case PUGL_KEY_F5: return ImGuiKey_F5;
-        case PUGL_KEY_F6: return ImGuiKey_F6;
-        case PUGL_KEY_F7: return ImGuiKey_F7;
-        case PUGL_KEY_F8: return ImGuiKey_F8;
-        case PUGL_KEY_F9: return ImGuiKey_F9;
-        case PUGL_KEY_F10: return ImGuiKey_F10;
-        case PUGL_KEY_F11: return ImGuiKey_F11;
-        case PUGL_KEY_F12: return ImGuiKey_F12;
-        default: return ImGuiKey_None;
-    }
+ImGuiKey ImGui_ImplPugl_KeyToImGuiKey(int keycode, int scancode) {
+  IM_UNUSED(scancode);
+  switch (keycode) {
+    case PUGL_KEY_TAB:
+      return ImGuiKey_Tab;
+    case PUGL_KEY_LEFT:
+      return ImGuiKey_LeftArrow;
+    case PUGL_KEY_RIGHT:
+      return ImGuiKey_RightArrow;
+    case PUGL_KEY_UP:
+      return ImGuiKey_UpArrow;
+    case PUGL_KEY_DOWN:
+      return ImGuiKey_DownArrow;
+    case PUGL_KEY_PAGE_UP:
+      return ImGuiKey_PageUp;
+    case PUGL_KEY_PAGE_DOWN:
+      return ImGuiKey_PageDown;
+    case PUGL_KEY_HOME:
+      return ImGuiKey_Home;
+    case PUGL_KEY_END:
+      return ImGuiKey_End;
+    case PUGL_KEY_INSERT:
+      return ImGuiKey_Insert;
+    case PUGL_KEY_DELETE:
+      return ImGuiKey_Delete;
+    case PUGL_KEY_BACKSPACE:
+      return ImGuiKey_Backspace;
+    case PUGL_KEY_SPACE:
+      return ImGuiKey_Space;
+    case PUGL_KEY_ENTER:
+      return ImGuiKey_Enter;
+    case PUGL_KEY_ESCAPE:
+      return ImGuiKey_Escape;
+    case '\'':
+      return ImGuiKey_Apostrophe;
+    case ',':
+      return ImGuiKey_Comma;
+    case '-':
+      return ImGuiKey_Minus;
+    case '.':
+      return ImGuiKey_Period;
+    case '/':
+      return ImGuiKey_Slash;
+    case ';':
+      return ImGuiKey_Semicolon;
+    case '=':
+      return ImGuiKey_Equal;
+    case '[':
+      return ImGuiKey_LeftBracket;
+    case '\\':
+      return ImGuiKey_Backslash;
+    case ']':
+      return ImGuiKey_RightBracket;
+    case 0x60:
+      return ImGuiKey_GraveAccent;
+    case 0xFFFF:
+      return ImGuiKey_GraveAccent;
+    case PUGL_KEY_CAPS_LOCK:
+      return ImGuiKey_CapsLock;
+    case PUGL_KEY_SCROLL_LOCK:
+      return ImGuiKey_ScrollLock;
+    case PUGL_KEY_NUM_LOCK:
+      return ImGuiKey_NumLock;
+    case PUGL_KEY_PRINT_SCREEN:
+      return ImGuiKey_PrintScreen;
+    case PUGL_KEY_PAUSE:
+      return ImGuiKey_Pause;
+    case PUGL_KEY_PAD_0:
+      return ImGuiKey_Keypad0;
+    case PUGL_KEY_PAD_1:
+      return ImGuiKey_Keypad1;
+    case PUGL_KEY_PAD_2:
+      return ImGuiKey_Keypad2;
+    case PUGL_KEY_PAD_3:
+      return ImGuiKey_Keypad3;
+    case PUGL_KEY_PAD_4:
+      return ImGuiKey_Keypad4;
+    case PUGL_KEY_PAD_5:
+      return ImGuiKey_Keypad5;
+    case PUGL_KEY_PAD_6:
+      return ImGuiKey_Keypad6;
+    case PUGL_KEY_PAD_7:
+      return ImGuiKey_Keypad7;
+    case PUGL_KEY_PAD_8:
+      return ImGuiKey_Keypad8;
+    case PUGL_KEY_PAD_9:
+      return ImGuiKey_Keypad9;
+    case PUGL_KEY_PAD_DECIMAL:
+      return ImGuiKey_KeypadDecimal;
+    case PUGL_KEY_PAD_DIVIDE:
+      return ImGuiKey_KeypadDivide;
+    case PUGL_KEY_PAD_MULTIPLY:
+      return ImGuiKey_KeypadMultiply;
+    case PUGL_KEY_PAD_SUBTRACT:
+      return ImGuiKey_KeypadSubtract;
+    case PUGL_KEY_PAD_ADD:
+      return ImGuiKey_KeypadAdd;
+    case PUGL_KEY_PAD_ENTER:
+      return ImGuiKey_KeypadEnter;
+    case PUGL_KEY_PAD_EQUAL:
+      return ImGuiKey_KeypadEqual;
+    case PUGL_KEY_SHIFT_L:
+      return ImGuiKey_LeftShift;
+    case PUGL_KEY_CTRL_L:
+      return ImGuiKey_LeftCtrl;
+    case PUGL_KEY_ALT_L:
+      return ImGuiKey_LeftAlt;
+    case PUGL_KEY_SUPER_L:
+      return ImGuiKey_LeftSuper;
+    case PUGL_KEY_SHIFT_R:
+      return ImGuiKey_RightShift;
+    case PUGL_KEY_CTRL_R:
+      return ImGuiKey_RightCtrl;
+    case PUGL_KEY_ALT_R:
+      return ImGuiKey_RightAlt;
+    case PUGL_KEY_SUPER_R:
+      return ImGuiKey_RightSuper;
+    case PUGL_KEY_MENU:
+      return ImGuiKey_Menu;
+    case '0':
+      return ImGuiKey_0;
+    case '1':
+      return ImGuiKey_1;
+    case '2':
+      return ImGuiKey_2;
+    case '3':
+      return ImGuiKey_3;
+    case '4':
+      return ImGuiKey_4;
+    case '5':
+      return ImGuiKey_5;
+    case '6':
+      return ImGuiKey_6;
+    case '7':
+      return ImGuiKey_7;
+    case '8':
+      return ImGuiKey_8;
+    case '9':
+      return ImGuiKey_9;
+    case 'A':
+      return ImGuiKey_A;
+    case 'B':
+      return ImGuiKey_B;
+    case 'C':
+      return ImGuiKey_C;
+    case 'D':
+      return ImGuiKey_D;
+    case 'E':
+      return ImGuiKey_E;
+    case 'F':
+      return ImGuiKey_F;
+    case 'G':
+      return ImGuiKey_G;
+    case 'H':
+      return ImGuiKey_H;
+    case 'I':
+      return ImGuiKey_I;
+    case 'J':
+      return ImGuiKey_J;
+    case 'K':
+      return ImGuiKey_K;
+    case 'L':
+      return ImGuiKey_L;
+    case 'M':
+      return ImGuiKey_M;
+    case 'N':
+      return ImGuiKey_N;
+    case 'O':
+      return ImGuiKey_O;
+    case 'P':
+      return ImGuiKey_P;
+    case 'Q':
+      return ImGuiKey_Q;
+    case 'R':
+      return ImGuiKey_R;
+    case 'S':
+      return ImGuiKey_S;
+    case 'T':
+      return ImGuiKey_T;
+    case 'U':
+      return ImGuiKey_U;
+    case 'V':
+      return ImGuiKey_V;
+    case 'W':
+      return ImGuiKey_W;
+    case 'X':
+      return ImGuiKey_X;
+    case 'Y':
+      return ImGuiKey_Y;
+    case 'Z':
+      return ImGuiKey_Z;
+    case PUGL_KEY_F1:
+      return ImGuiKey_F1;
+    case PUGL_KEY_F2:
+      return ImGuiKey_F2;
+    case PUGL_KEY_F3:
+      return ImGuiKey_F3;
+    case PUGL_KEY_F4:
+      return ImGuiKey_F4;
+    case PUGL_KEY_F5:
+      return ImGuiKey_F5;
+    case PUGL_KEY_F6:
+      return ImGuiKey_F6;
+    case PUGL_KEY_F7:
+      return ImGuiKey_F7;
+    case PUGL_KEY_F8:
+      return ImGuiKey_F8;
+    case PUGL_KEY_F9:
+      return ImGuiKey_F9;
+    case PUGL_KEY_F10:
+      return ImGuiKey_F10;
+    case PUGL_KEY_F11:
+      return ImGuiKey_F11;
+    case PUGL_KEY_F12:
+      return ImGuiKey_F12;
+    default:
+      return ImGuiKey_None;
+  }
 }
 
-static void ImGui_ImplPugl_UpdateKeyModifiers(PuglView* window) {
+static void ImGui_ImplPugl_UpdateKeyModifiers(PuglMods const& state) {
   ImGuiIO& io = ImGui::GetIO();
-  // TODO
-  //  io.AddKeyEvent(ImGuiMod_Ctrl,  (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) || (glfwGetKey(window,
-  //  GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS)); io.AddKeyEvent(ImGuiMod_Shift, (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)
-  //  == GLFW_PRESS) || (glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT)   == GLFW_PRESS)); io.AddKeyEvent(ImGuiMod_Alt,
-  //  (glfwGetKey(window, GLFW_KEY_LEFT_ALT)     == GLFW_PRESS) || (glfwGetKey(window, GLFW_KEY_RIGHT_ALT)     ==
-  //  GLFW_PRESS)); io.AddKeyEvent(ImGuiMod_Super, (glfwGetKey(window, GLFW_KEY_LEFT_SUPER)   == GLFW_PRESS) ||
-  //  (glfwGetKey(window, GLFW_KEY_RIGHT_SUPER)   == GLFW_PRESS));
+  io.AddKeyEvent(ImGuiMod_Ctrl, state & PUGL_MOD_CTRL);
+  io.AddKeyEvent(ImGuiMod_Shift, state & PUGL_MOD_SHIFT);
+  io.AddKeyEvent(ImGuiMod_Alt, state & PUGL_MOD_ALT);
+  io.AddKeyEvent(ImGuiMod_Super, state & PUGL_MOD_SUPER);
 }
 
-// static bool ImGui_ImplGlfw_ShouldChainCallback(GLFWwindow* window)
-// {
-//     ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
-//     return bd->CallbacksChainForAllWindows ? true : (window == bd->Window);
-// }
-
-void ImGui_ImplPugl_MouseButtonEventHandler(PuglView* view, PuglButtonEvent const& event) {
-  ImGui_ImplPugl_UpdateKeyModifiers(view);
+void ImGui_ImplPugl_MouseButtonEventHandler(PuglView* /*view*/, PuglButtonEvent const& event) {
+  ImGui_ImplPugl_UpdateKeyModifiers(event.state);
   ImGuiIO& io = ImGui::GetIO();
-  if (event.button >= 0 && event.button < ImGuiMouseButton_COUNT)
+  if (event.button < ImGuiMouseButton_COUNT)
     io.AddMouseButtonEvent(event.button, event.type == PUGL_BUTTON_PRESS);
 }
 
-void ImGui_ImplPugl_ScrollEventHandler(PuglView* view, PuglScrollEvent event) {
-    ImGuiIO& io = ImGui::GetIO();
-    io.AddMouseWheelEvent(event.dx, event.dy);
+void ImGui_ImplPugl_ScrollEventHandler(PuglView* /*view*/, PuglScrollEvent event) {
+  ImGui_ImplPugl_UpdateKeyModifiers(event.state);
+  ImGuiIO& io = ImGui::GetIO();
+  io.AddMouseWheelEvent(event.dx, event.dy);
 }
 
-// // FIXME: should this be baked into ImGui_ImplGlfw_KeyToImGuiKey()? then what about the values passed to
-// io.SetKeyEventNativeData()? static int ImGui_ImplGlfw_TranslateUntranslatedKey(int key, int scancode)
-// {
-// #if GLFW_HAS_GETKEYNAME && !defined(EMSCRIPTEN_USE_EMBEDDED_GLFW3)
-//     // GLFW 3.1+ attempts to "untranslate" keys, which goes the opposite of what every other framework does, making
-//     using lettered shortcuts difficult.
-//     // (It had reasons to do so: namely GLFW is/was more likely to be used for WASD-type game controls rather than
-//     lettered shortcuts, but IHMO the 3.1 change could have been done differently)
-//     // See https://github.com/glfw/glfw/issues/1502 for details.
-//     // Adding a workaround to undo this (so our keys are translated->untranslated->translated, likely a lossy
-//     process).
-//     // This won't cover edge cases but this is at least going to cover common cases.
-//     if (key >= GLFW_KEY_KP_0 && key <= GLFW_KEY_KP_EQUAL)
-//         return key;
-//     GLFWerrorfun prev_error_callback = glfwSetErrorCallback(nullptr);
-//     const char* key_name = glfwGetKeyName(key, scancode);
-//     glfwSetErrorCallback(prev_error_callback);
-// #if GLFW_HAS_GETERROR && !defined(EMSCRIPTEN_USE_EMBEDDED_GLFW3) // Eat errors (see #5908)
-//     (void)glfwGetError(nullptr);
-// #endif
-//     if (key_name && key_name[0] != 0 && key_name[1] == 0)
-//     {
-//         const char char_names[] = "`-=[]\\,;\'./";
-//         const int char_keys[] = { GLFW_KEY_GRAVE_ACCENT, GLFW_KEY_MINUS, GLFW_KEY_EQUAL, GLFW_KEY_LEFT_BRACKET,
-//         GLFW_KEY_RIGHT_BRACKET, GLFW_KEY_BACKSLASH, GLFW_KEY_COMMA, GLFW_KEY_SEMICOLON, GLFW_KEY_APOSTROPHE,
-//         GLFW_KEY_PERIOD, GLFW_KEY_SLASH, 0 }; IM_ASSERT(IM_ARRAYSIZE(char_names) == IM_ARRAYSIZE(char_keys)); if
-//         (key_name[0] >= '0' && key_name[0] <= '9')               { key = GLFW_KEY_0 + (key_name[0] - '0'); } else if
-//         (key_name[0] >= 'A' && key_name[0] <= 'Z')          { key = GLFW_KEY_A + (key_name[0] - 'A'); } else if
-//         (key_name[0] >= 'a' && key_name[0] <= 'z')          { key = GLFW_KEY_A + (key_name[0] - 'a'); } else if
-//         (const char* p = strchr(char_names, key_name[0]))   { key = char_keys[p - char_names]; }
-//     }
-//     // if (action == GLFW_PRESS) printf("key %d scancode %d name '%s'\n", key, scancode, key_name);
-// #else
-//     IM_UNUSED(scancode);
-// #endif
-//     return key;
-// }
-
-// /**
-//    Key press or release event.
-
-//    This event represents low-level key presses and releases.  This can be used
-//    for "direct" keyboard handing like key bindings, but must not be interpreted
-//    as text input.
-
-//    Keys are represented portably as Unicode code points, using the "natural"
-//    code point for the key where possible (see #PuglKey for details).  The `key`
-//    field is the code for the pressed key, without any modifiers applied.  For
-//    example, a press or release of the 'A' key will have `key` 97 ('a')
-//    regardless of whether shift or control are being held.
-
-//    Alternatively, the raw `keycode` can be used to work directly with physical
-//    keys, but note that this value is not portable and differs between platforms
-//    and hardware.
-// */
-// typedef struct {
-//   PuglEventType  type;    ///< #PUGL_KEY_PRESS or #PUGL_KEY_RELEASE
-//   PuglEventFlags flags;   ///< Bitwise OR of #PuglEventFlag values
-//   double         time;    ///< Time in seconds
-//   double         x;       ///< View-relative X coordinate
-//   double         y;       ///< View-relative Y coordinate
-//   double         xRoot;   ///< Root-relative X coordinate
-//   double         yRoot;   ///< Root-relative Y coordinate
-//   PuglMods       state;   ///< Bitwise OR of #PuglMod flags
-//   uint32_t       keycode; ///< Raw key code
-//   uint32_t       key;     ///< Unshifted Unicode character code, or 0
-// } PuglKeyEvent;
-void ImGui_ImplPugl_KeyEventHandler(PuglView* view, PuglKeyEvent const& event)
-{
-    ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
-
-    if (event.type != PUGL_KEY_PRESS && event.type != PUGL_KEY_RELEASE)
-        return;
-
-    ImGui_ImplPugl_UpdateKeyModifiers(view);
-
-    // WTF? seems to be glfw specific workaround (let's hope so :-))
-    // keycode = ImGui_ImplPugl_TranslateUntranslatedKey(keycode, scancode); 
-
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiKey imgui_key = ImGui_ImplPugl_KeyToImGuiKey(event.keycode, 0);
-    io.AddKeyEvent(imgui_key, (event.type == PUGL_KEY_PRESS));
-    io.SetKeyEventNativeData(imgui_key, event.keycode, 0); // To support legacy indexing (<1.87 user code)
+void ImGui_ImplPugl_KeyEventHandler(PuglView* /*view*/, PuglKeyEvent const& event) {
+  if (event.type != PUGL_KEY_PRESS && event.type != PUGL_KEY_RELEASE) {
+    return;
+  }
+  ImGui_ImplPugl_UpdateKeyModifiers(event.state);
+  ImGuiIO& io = ImGui::GetIO();
+  ImGuiKey imgui_key = ImGui_ImplPugl_KeyToImGuiKey(event.keycode, 0);
+  io.AddKeyEvent(imgui_key, (event.type == PUGL_KEY_PRESS));
+  io.SetKeyEventNativeData(imgui_key, event.keycode, 0);  // To support legacy indexing (<1.87 user code)
 }
 
-void ImGui_ImplPugl_FocusEventHandler(PuglView* view, PuglFocusEvent const& event) {
-    ImGuiIO& io = ImGui::GetIO();
-    io.AddFocusEvent(event.type != PUGL_FOCUS_IN);
+void ImGui_ImplPugl_FocusEventHandler(PuglView* /*view*/, PuglFocusEvent const& event) {
+  ImGuiIO& io = ImGui::GetIO();
+  io.AddFocusEvent(event.type != PUGL_FOCUS_IN);
 }
 
-void ImGui_ImplPugl_MotionEventHandler(PuglView* view, PuglMotionEvent const& event) {
+void ImGui_ImplPugl_MotionEventHandler(PuglView* /*view*/, PuglMotionEvent const& event) {
   ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
-  IM_ASSERT(bd != nullptr && "No platform backend to shutdown, or already shutdown?");
+  IM_ASSERT(bd != nullptr && "platform backend nullptr");
+  ImGui_ImplPugl_UpdateKeyModifiers(event.state);
   ImGuiIO& io = ImGui::GetIO();
   io.AddMousePosEvent(event.x, event.y);
   bd->LastValidMousePos = ImVec2(event.x, event.y);
@@ -341,43 +351,32 @@ void ImGui_ImplPugl_MotionEventHandler(PuglView* view, PuglMotionEvent const& ev
 
 // Workaround: X11 seems to send spurious Leave/Enter events which would make us lose our position,
 // so we back it up and restore on Leave/Enter (see https://github.com/ocornut/imgui/issues/4984)
-void ImGui_ImplPugl_CrossingEventHandler2(PuglView* view, PuglCrossingEvent const& event)
-{
-    ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
-    ImGuiIO& io = ImGui::GetIO();
-    if (event.type == PUGL_POINTER_IN)
-    {
-        bd->MouseView = view;
-        io.AddMousePosEvent(bd->LastValidMousePos.x, bd->LastValidMousePos.y);
-    }
-    else if (!event.type == PUGL_POINTER_IN && bd->MouseView == view)
-    {
-        bd->LastValidMousePos = io.MousePos;
-        bd->MouseView = nullptr;
-        io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
-    }
-}
-void ImGui_ImplPugl_CrossingEventHandler(PuglView* view, PuglCrossingEvent const& event)
-{
-    ImGuiIO& io = ImGui::GetIO();
-    if (event.type == PUGL_POINTER_IN)
-    {
-        io.AddMousePosEvent(event.x, event.y);
-    } else {
-       io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
-    }
+void ImGui_ImplPugl_CrossingEventHandler2(PuglView* view, PuglCrossingEvent const& event) {
+  ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
+  ImGuiIO& io = ImGui::GetIO();
+  if (event.type == PUGL_POINTER_IN) {
+    bd->MouseView = view;
+    io.AddMousePosEvent(bd->LastValidMousePos.x, bd->LastValidMousePos.y);
+  } else if (!event.type == PUGL_POINTER_IN && bd->MouseView == view) {
+    bd->LastValidMousePos = io.MousePos;
+    bd->MouseView = nullptr;
+    io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
+  }
 }
 
+void ImGui_ImplPugl_CrossingEventHandler(PuglView* /*view*/, PuglCrossingEvent const& event) {
+  ImGuiIO& io = ImGui::GetIO();
+  if (event.type == PUGL_POINTER_IN) {
+    io.AddMousePosEvent(event.x, event.y);
+  } else {
+    io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
+  }
+}
 
-// void ImGui_ImplGlfw_CharCallback(GLFWwindow* window, unsigned int c)
-// {
-//     ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
-//     if (bd->PrevUserCallbackChar != nullptr && ImGui_ImplGlfw_ShouldChainCallback(window))
-//         bd->PrevUserCallbackChar(window, c);
-
-//     ImGuiIO& io = ImGui::GetIO();
-//     io.AddInputCharacter(c);
-// }
+void ImGui_ImplPugl_TextEventHandler(PuglView* /*view*/, PuglTextEvent const& event) {
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddInputCharacter(event.character);
+}
 
 // void ImGui_ImplGlfw_MonitorCallback(GLFWmonitor*, int)
 // {
@@ -701,7 +700,7 @@ PuglStatus ImGui_ImplPugl_EventHandler(PuglView* view, const PuglEvent* event) {
       ImGui_ImplPugl_KeyEventHandler(view, event->key);
       break;
     case PUGL_TEXT:  ///< Character entered, a #PuglTextEvent
-      // TODO : handle event
+      ImGui_ImplPugl_TextEventHandler(view, event->text);
       break;
     case PUGL_POINTER_IN:  ///< Pointer entered view, a #PuglCrossingEvent
       ImGui_ImplPugl_CrossingEventHandler(view, event->crossing);
@@ -715,7 +714,7 @@ PuglStatus ImGui_ImplPugl_EventHandler(PuglView* view, const PuglEvent* event) {
     case PUGL_BUTTON_RELEASE:  ///< Mouse button released, a #PuglButtonEvent
       ImGui_ImplPugl_MouseButtonEventHandler(view, event->button);
       break;
-    case PUGL_MOTION: ///< Pointer moved, a #PuglMotionEvent
+    case PUGL_MOTION:  ///< Pointer moved, a #PuglMotionEvent
       ImGui_ImplPugl_MotionEventHandler(view, event->motion);
       break;
     case PUGL_SCROLL:  ///< Scrolled, a #PuglScrollEvent

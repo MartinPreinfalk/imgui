@@ -76,5 +76,6 @@ IMGUI_IMPL_API PuglStatus ImGui_ImplPugl_EventHandler(PuglView* view, const Pugl
 // Pugl helpers
 IMGUI_IMPL_API void ImGui_ImplPugl_Sleep(int milliseconds);
 
+IMGUI_IMPL_API ImGuiKey ImGui_ImplPugl_KeyToImGuiKey(int keycode, int scancode);
 
 #endif  // #ifndef IMGUI_DISABLE
