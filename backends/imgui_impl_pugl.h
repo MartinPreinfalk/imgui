@@ -47,7 +47,8 @@
 #include <pugl/pugl.h>
 
 // Follow "Getting Started" link and check examples/ folder to learn about using backends!
-IMGUI_IMPL_API bool ImGui_ImplPugl_InitForOpenGL(PuglView* view, bool install_event_handler);
+// IMGUI_IMPL_API bool ImGui_ImplPugl_InitForOpenGL(PuglView* view, bool install_event_handler);
+IMGUI_IMPL_API bool ImGui_ImplPugl_InitForOpenGL(PuglView* view);
 IMGUI_IMPL_API void ImGui_ImplPugl_Shutdown();
 IMGUI_IMPL_API void ImGui_ImplPugl_NewFrame();
 
@@ -56,8 +57,8 @@ IMGUI_IMPL_API void ImGui_ImplPugl_NewFrame();
 // pointer will be installed for you. It will chain-call user's previously installed one, if any.
 // - When calling Init with 'install_event_handler=false': Pugl event function pointer callbacks won't be installed. You
 // will need to call individual function yourself from your own Pugl event function pointer.
-IMGUI_IMPL_API void ImGui_ImplPugl_SetEventFunc(PuglView* view, PuglEventFunc eventFunc);
-IMGUI_IMPL_API void ImGui_ImplPugl_RestoreEventFunc(PuglView* window);
+// IMGUI_IMPL_API void ImGui_ImplPugl_SetEventFunc(PuglView* view, PuglEventFunc eventFunc);
+// IMGUI_IMPL_API void ImGui_ImplPugl_RestoreEventFunc(PuglView* window);
 
 // Pugl event handler that is installed when calling Init with 'install_event_handler=true'
 // It is part of the API only to expose it for third-party users if they want to to use that directly (but undocumented)
@@ -66,12 +67,12 @@ IMGUI_IMPL_API PuglStatus ImGui_ImplPugl_EventHandler(PuglView* view, const Pugl
 // Pugl event handler options:
 // - Set 'chain_for_all_windows=true' to enable chaining callbacks for all views (including secondary viewports created
 // by backends or by user)
-IMGUI_IMPL_API void ImGui_ImplPugl_SetEventFuncChainForAllViews(
-    bool chain_for_all_views);  // TODO: do we need this and if yes what is it?
+// IMGUI_IMPL_API void ImGui_ImplPugl_SetEventFuncChainForAllViews(
+//     bool chain_for_all_views);  // TODO: do we need this and if yes what is it?
 
 // ImGui's Pugl event handler function
 // (to call yourself if you didn't install handler)
-IMGUI_IMPL_API PuglStatus ImGui_ImplPugl_EventHandler(PuglView* view, const PuglEvent* event);
+// IMGUI_IMPL_API PuglStatus ImGui_ImplPugl_EventHandler(PuglView* view, const PuglEvent* event);
 
 // Pugl helpers
 IMGUI_IMPL_API void ImGui_ImplPugl_Sleep(int milliseconds);

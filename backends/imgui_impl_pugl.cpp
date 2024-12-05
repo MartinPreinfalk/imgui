@@ -63,9 +63,9 @@ struct ImGui_ImplPugl_Data {
   double Time = 0.0;
   PuglView* MouseView = nullptr;
   ImVec2 LastValidMousePos = {0, 0};
-  bool InstalledEventFunc = false;
-  bool CallbacksChainForAllWindows = false;
-  PuglEventFunc PrevEventFunc = nullptr;
+  // bool InstalledEventFunc = false;
+  // bool CallbacksChainForAllWindows = false;
+  // PuglEventFunc PrevEventFunc = nullptr;
 
   ImGui_ImplPugl_Data() = default;
 };
@@ -78,10 +78,10 @@ static ImGui_ImplPugl_Data* ImGui_ImplPugl_GetBackendData() {
   return ImGui::GetCurrentContext() ? (ImGui_ImplPugl_Data*)ImGui::GetIO().BackendPlatformUserData : nullptr;
 }
 
-static bool ImGui_ImplPugl_ShouldChainCallback(PuglView* view) {
-  ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
-  return bd->CallbacksChainForAllWindows ? true : (view == bd->View);
-}
+// static bool ImGui_ImplPugl_ShouldChainCallback(PuglView* view) {
+//   ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
+//   return bd->CallbacksChainForAllWindows ? true : (view == bd->View);
+// }
 
 ImGuiKey ImGui_ImplPugl_KeyToImGuiKey(int keycode, int scancode) {
   IM_UNUSED(scancode);
@@ -399,25 +399,25 @@ void ImGui_ImplPugl_TextEventHandler(PuglView* /*view*/, PuglTextEvent const& ev
 // }
 // #endif
 
-void ImGui_ImplPugl_InstallEventFunc(PuglView* view) {
-  ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
-  IM_ASSERT(bd->InstalledEventFunc == false && "EventFunc already installed!");
-  IM_ASSERT(bd->View == view);
+// void ImGui_ImplPugl_InstallEventFunc(PuglView* view) {
+//   ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
+//   IM_ASSERT(bd->InstalledEventFunc == false && "EventFunc already installed!");
+//   IM_ASSERT(bd->View == view);
 
-  bd->PrevEventFunc = puglGetEventFunc(view);
-  puglSetEventFunc(view, ImGui_ImplPugl_EventHandler);
-  bd->InstalledEventFunc = true;
-}
+//   bd->PrevEventFunc = puglGetEventFunc(view);
+//   puglSetEventFunc(view, ImGui_ImplPugl_EventHandler);
+//   bd->InstalledEventFunc = true;
+// }
 
-void ImGui_ImplPugl_RestoreEventFunc(PuglView* view) {
-  ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
-  IM_ASSERT(bd->InstalledEventFunc == true && "Callbacks not installed!");
-  IM_ASSERT(bd->View == view);
+// void ImGui_ImplPugl_RestoreEventFunc(PuglView* view) {
+//   ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
+//   IM_ASSERT(bd->InstalledEventFunc == true && "Callbacks not installed!");
+//   IM_ASSERT(bd->View == view);
 
-  puglSetEventFunc(view, bd->PrevEventFunc);
-  bd->InstalledEventFunc = false;
-  bd->PrevEventFunc = nullptr;
-}
+//   puglSetEventFunc(view, bd->PrevEventFunc);
+//   bd->InstalledEventFunc = false;
+//   bd->PrevEventFunc = nullptr;
+// }
 
 // // Set to 'true' to enable chaining installed callbacks for all windows (including secondary viewports created by
 // backends or by user.
@@ -438,7 +438,8 @@ void ImGui_ImplPugl_RestoreEventFunc(PuglView* view) {
 // EM_JS(void, ImGui_ImplGlfw_EmscriptenOpenURL, (const char* url), { url = url ? UTF8ToString(url) : null; if (url)
 // window.open(url, '_blank'); }); #endif #endif
 
-bool ImGui_ImplPugl_InitForOpenGL(PuglView* view, bool install_event_func) {
+// bool ImGui_ImplPugl_InitForOpenGL(PuglView* view, bool install_event_func) {
+bool ImGui_ImplPugl_InitForOpenGL(PuglView* view) {
   ImGuiIO& io = ImGui::GetIO();
   IMGUI_CHECKVERSION();
   IM_ASSERT(io.BackendPlatformUserData == nullptr && "Already initialized a platform backend!");
@@ -494,7 +495,7 @@ bool ImGui_ImplPugl_InitForOpenGL(PuglView* view, bool install_event_func) {
   // #endif
 
   // Chain GLFW callbacks: our callbacks will call the user's previously installed callbacks, if any.
-  if (install_event_func) ImGui_ImplPugl_InstallEventFunc(view);
+  // if (install_event_func) ImGui_ImplPugl_InstallEventFunc(view);
 
   // Set platform dependent data in viewport
   ImGuiViewport* main_viewport = ImGui::GetMainViewport();
@@ -528,7 +529,7 @@ void ImGui_ImplPugl_Shutdown() {
   IM_ASSERT(bd != nullptr && "No platform backend to shutdown, or already shutdown?");
   ImGuiIO& io = ImGui::GetIO();
 
-  if (bd->InstalledEventFunc) ImGui_ImplPugl_RestoreEventFunc(bd->View);
+  // if (bd->InstalledEventFunc) ImGui_ImplPugl_RestoreEventFunc(bd->View);
 
   // FIXME TODO wtf needed?
   // for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_COUNT; cursor_n++)
@@ -658,13 +659,13 @@ void ImGui_ImplPugl_Shutdown() {
 
 PuglStatus ImGui_ImplPugl_EventHandler(PuglView* view, const PuglEvent* event) {
   if (!event) return PUGL_FAILURE;  // just in case
-  ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
-  if (bd->PrevEventFunc != nullptr && ImGui_ImplPugl_ShouldChainCallback(view)) {
-    auto status = bd->PrevEventFunc(view, event);
-    if (status != PUGL_SUCCESS) {
-      return status;
-    }
-  }
+  // ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
+  // if (bd->PrevEventFunc != nullptr && ImGui_ImplPugl_ShouldChainCallback(view)) {
+  //   auto status = bd->PrevEventFunc(view, event);
+  //   if (status != PUGL_SUCCESS) {
+  //     return status;
+  //   }
+  // }
   switch (event->type) {
     case PUGL_NOTHING:  ///< No event
       // TODO : handle event
