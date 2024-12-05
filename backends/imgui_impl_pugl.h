@@ -53,15 +53,17 @@ IMGUI_IMPL_API void ImGui_ImplPugl_Shutdown();
 IMGUI_IMPL_API void ImGui_ImplPugl_NewFrame();
 
 // Pugl event handler
-// - When calling Init with 'install_event_handler=true': ImGui_ImplPugl_SetEventFunc() is called. Pugl event function
-// pointer will be installed for you. It will chain-call user's previously installed one, if any.
-// - When calling Init with 'install_event_handler=false': Pugl event function pointer callbacks won't be installed. You
-// will need to call individual function yourself from your own Pugl event function pointer.
-// IMGUI_IMPL_API void ImGui_ImplPugl_SetEventFunc(PuglView* view, PuglEventFunc eventFunc);
-// IMGUI_IMPL_API void ImGui_ImplPugl_RestoreEventFunc(PuglView* window);
-
-// Pugl event handler that is installed when calling Init with 'install_event_handler=true'
-// It is part of the API only to expose it for third-party users if they want to to use that directly (but undocumented)
+// - You will need to call individual function yourself from your own Pugl event function pointer.
+// - There are typesafe versions, one for each requried event.
+IMGUI_IMPL_API PuglStatus ImGui_ImplPugl_FocusEventHandler(PuglView* view, const PuglFocusEvent* event);
+IMGUI_IMPL_API PuglStatus ImGui_ImplPugl_KeyEventHandler(PuglView* view, const PuglKeyEvent* event);
+IMGUI_IMPL_API PuglStatus ImGui_ImplPugl_TextEventHandler(PuglView* view, const PuglTextEvent* event);
+IMGUI_IMPL_API PuglStatus ImGui_ImplPugl_CrossingEventHandler(PuglView* view, const PuglCrossingEvent* event);
+IMGUI_IMPL_API PuglStatus ImGui_ImplPugl_ButtonEventHandler(PuglView* view, const PuglButtonEvent* event);
+IMGUI_IMPL_API PuglStatus ImGui_ImplPugl_MotionEventHandler(PuglView* view, const PuglMotionEvent* event);
+IMGUI_IMPL_API PuglStatus ImGui_ImplPugl_ScrollEventHandler(PuglView* view, const PuglScrollEvent* event);
+// There is also an alternative generic overload taking an arbitrary PuglEvent pointer. It comes with the overhead of
+// filtering and casting events, therefore the dedicated type-safe version are recommended.
 IMGUI_IMPL_API PuglStatus ImGui_ImplPugl_EventHandler(PuglView* view, const PuglEvent* event);
 
 // Pugl event handler options:

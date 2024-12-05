@@ -63,25 +63,19 @@ struct ImGui_ImplPugl_Data {
   double Time = 0.0;
   PuglView* MouseView = nullptr;
   ImVec2 LastValidMousePos = {0, 0};
-  // bool InstalledEventFunc = false;
-  // bool CallbacksChainForAllWindows = false;
-  // PuglEventFunc PrevEventFunc = nullptr;
-
   ImGui_ImplPugl_Data() = default;
 };
 
 // Backend data stored in io.BackendPlatformUserData to allow support for multiple Dear ImGui contexts
-// It is STRONGLY preferred that you use docking branch with multi-viewports (== single Dear ImGui context + multiple
-// windows) instead of multiple Dear ImGui contexts.
-// FIXME: multi-context support is not yet tested and probably dysfunctional in this backend.
+// For glfw the comments say that it is STRONGLY preferred that you use docking branch with multi-viewports (== single
+// Dear ImGui context + multiple windows) instead of multiple Dear ImGui contexts.
+// FIXME: However the multi-context support is not yet tested (or even implemented) and probably dysfunctional in this
+// backend. The main reason for that is that on github there are many comments that the feature multiple windows has
+// issues on linux x11 which is my main use case. Currently I don't have the time to invest great effort to get it to
+// work and in my tests the use-cases I care for work well with multiple contexts.
 static ImGui_ImplPugl_Data* ImGui_ImplPugl_GetBackendData() {
   return ImGui::GetCurrentContext() ? (ImGui_ImplPugl_Data*)ImGui::GetIO().BackendPlatformUserData : nullptr;
 }
-
-// static bool ImGui_ImplPugl_ShouldChainCallback(PuglView* view) {
-//   ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
-//   return bd->CallbacksChainForAllWindows ? true : (view == bd->View);
-// }
 
 ImGuiKey ImGui_ImplPugl_KeyToImGuiKey(int keycode, int scancode) {
   IM_UNUSED(scancode);
@@ -311,71 +305,138 @@ static void ImGui_ImplPugl_UpdateKeyModifiers(PuglMods const& state) {
   io.AddKeyEvent(ImGuiMod_Super, state & PUGL_MOD_SUPER);
 }
 
-void ImGui_ImplPugl_MouseButtonEventHandler(PuglView* /*view*/, PuglButtonEvent const& event) {
-  ImGui_ImplPugl_UpdateKeyModifiers(event.state);
-  ImGuiIO& io = ImGui::GetIO();
-  if (event.button < ImGuiMouseButton_COUNT)
-    io.AddMouseButtonEvent(event.button, event.type == PUGL_BUTTON_PRESS);
-}
-
-void ImGui_ImplPugl_ScrollEventHandler(PuglView* /*view*/, PuglScrollEvent event) {
-  ImGui_ImplPugl_UpdateKeyModifiers(event.state);
-  ImGuiIO& io = ImGui::GetIO();
-  io.AddMouseWheelEvent(event.dx, event.dy);
-}
-
-void ImGui_ImplPugl_KeyEventHandler(PuglView* /*view*/, PuglKeyEvent const& event) {
-  if (event.type != PUGL_KEY_PRESS && event.type != PUGL_KEY_RELEASE) {
-    return;
+PuglStatus ImGui_ImplPugl_EventHandler(PuglView* view, const PuglEvent* event) {
+  if (!event) return PUGL_FAILURE;
+  switch (event->type) {
+    case PUGL_NOTHING:  ///< No event
+      // TODO : handle event
+      break;
+    case PUGL_REALIZE:  ///< View realized, a #PuglRealizeEvent
+      // TODO : handle event
+      break;
+    case PUGL_UNREALIZE:  ///< View unrealizeed, a #PuglUnrealizeEvent
+      // TODO : handle event
+      break;
+    case PUGL_CONFIGURE:  ///< View configured, a #PuglConfigureEvent
+      // TODO : handle event
+      break;
+    case PUGL_UPDATE:  ///< View ready to draw, a #PuglUpdateEvent
+      // TODO : handle event
+      break;
+    case PUGL_EXPOSE:  ///< View must be drawn, a #PuglExposeEvent
+      // TODO : handle event
+      break;
+    case PUGL_CLOSE:  ///< View will be closed, a #PuglCloseEvent
+      // TODO : handle event
+      break;
+    case PUGL_FOCUS_IN:  ///< Keyboard focus entered view, a #PuglFocusEvent
+      return ImGui_ImplPugl_FocusEventHandler(view, &event->focus);
+    case PUGL_FOCUS_OUT:  ///< Keyboard focus left view, a #PuglFocusEvent
+      return ImGui_ImplPugl_FocusEventHandler(view, &event->focus);
+    case PUGL_KEY_PRESS:  ///< Key pressed, a #PuglKeyEvent
+      return ImGui_ImplPugl_KeyEventHandler(view, &event->key);
+    case PUGL_KEY_RELEASE:  ///< Key released, a #PuglKeyEvent
+      return ImGui_ImplPugl_KeyEventHandler(view, &event->key);
+    case PUGL_TEXT:  ///< Character entered, a #PuglTextEvent
+      return ImGui_ImplPugl_TextEventHandler(view, &event->text);
+    case PUGL_POINTER_IN:  ///< Pointer entered view, a #PuglCrossingEvent
+      return ImGui_ImplPugl_CrossingEventHandler(view, &event->crossing);
+    case PUGL_POINTER_OUT:  ///< Pointer left view, a #PuglCrossingEvent
+      return ImGui_ImplPugl_CrossingEventHandler(view, &event->crossing);
+    case PUGL_BUTTON_PRESS:  ///< Mouse button pressed, a #PuglButtonEvent
+      return ImGui_ImplPugl_ButtonEventHandler(view, &event->button);
+    case PUGL_BUTTON_RELEASE:  ///< Mouse button released, a #PuglButtonEvent
+      return ImGui_ImplPugl_ButtonEventHandler(view, &event->button);
+    case PUGL_MOTION:  ///< Pointer moved, a #PuglMotionEvent
+      return ImGui_ImplPugl_MotionEventHandler(view, &event->motion);
+    case PUGL_SCROLL:  ///< Scrolled, a #PuglScrollEvent
+      return ImGui_ImplPugl_ScrollEventHandler(view, &event->scroll);
+    case PUGL_CLIENT:  ///< Custom client message, a #PuglClientEvent
+      // TODO : handle event
+      break;
+    case PUGL_TIMER:  ///< Timer triggered, a #PuglTimerEvent
+      // TODO : handle event
+      break;
+    case PUGL_LOOP_ENTER:  ///< Recursive loop entered, a #PuglLoopEnterEvent
+      // TODO : handle event
+      break;
+    case PUGL_LOOP_LEAVE:  ///< Recursive loop left, a #PuglLoopLeaveEvent
+      // TODO : handle event
+      break;
+    case PUGL_DATA_OFFER:  ///< Data offered from clipboard, a #PuglDataOfferEvent
+      // TODO : handle event
+      break;
+    case PUGL_DATA:  ///< Data available from clipboard, a #PuglDataEvent
+      // TODO : handle event
+      break;
+    default:
+      break;
   }
-  ImGui_ImplPugl_UpdateKeyModifiers(event.state);
-  ImGuiIO& io = ImGui::GetIO();
-  ImGuiKey imgui_key = ImGui_ImplPugl_KeyToImGuiKey(event.keycode, 0);
-  io.AddKeyEvent(imgui_key, (event.type == PUGL_KEY_PRESS));
-  io.SetKeyEventNativeData(imgui_key, event.keycode, 0);  // To support legacy indexing (<1.87 user code)
+  return PUGL_SUCCESS;
 }
 
-void ImGui_ImplPugl_FocusEventHandler(PuglView* /*view*/, PuglFocusEvent const& event) {
+PuglStatus ImGui_ImplPugl_ButtonEventHandler(PuglView* /*view*/, PuglButtonEvent const* event) {
+  if (!event) return PUGL_FAILURE;
+  ImGui_ImplPugl_UpdateKeyModifiers(event->state);
   ImGuiIO& io = ImGui::GetIO();
-  io.AddFocusEvent(event.type != PUGL_FOCUS_IN);
+  if (event->button < ImGuiMouseButton_COUNT) io.AddMouseButtonEvent(event->button, event->type == PUGL_BUTTON_PRESS);
+  return PUGL_SUCCESS;
 }
 
-void ImGui_ImplPugl_MotionEventHandler(PuglView* /*view*/, PuglMotionEvent const& event) {
+PuglStatus ImGui_ImplPugl_ScrollEventHandler(PuglView* /*view*/, PuglScrollEvent const* event) {
+  if (!event) return PUGL_FAILURE;
+  ImGui_ImplPugl_UpdateKeyModifiers(event->state);
+  ImGuiIO& io = ImGui::GetIO();
+  io.AddMouseWheelEvent(event->dx, event->dy);
+  return PUGL_SUCCESS;
+}
+
+PuglStatus ImGui_ImplPugl_KeyEventHandler(PuglView* /*view*/, PuglKeyEvent const* event) {
+  if (!event) return PUGL_FAILURE;
+  if (event->type == PUGL_KEY_PRESS || event->type == PUGL_KEY_RELEASE) {
+    ImGui_ImplPugl_UpdateKeyModifiers(event->state);
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuiKey imgui_key = ImGui_ImplPugl_KeyToImGuiKey(event->keycode, 0);
+    io.AddKeyEvent(imgui_key, (event->type == PUGL_KEY_PRESS));
+    io.SetKeyEventNativeData(imgui_key, event->keycode, 0);  // To support legacy indexing (<1.87 user code)
+  }
+  return PUGL_SUCCESS;
+}
+
+PuglStatus ImGui_ImplPugl_FocusEventHandler(PuglView* /*view*/, PuglFocusEvent const* event) {
+  if (!event) return PUGL_FAILURE;
+  ImGuiIO& io = ImGui::GetIO();
+  io.AddFocusEvent(event->type != PUGL_FOCUS_IN);
+  return PUGL_SUCCESS;
+}
+
+PuglStatus ImGui_ImplPugl_MotionEventHandler(PuglView* /*view*/, PuglMotionEvent const* event) {
+  if (!event) return PUGL_FAILURE;
   ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
   IM_ASSERT(bd != nullptr && "platform backend nullptr");
-  ImGui_ImplPugl_UpdateKeyModifiers(event.state);
+  ImGui_ImplPugl_UpdateKeyModifiers(event->state);
   ImGuiIO& io = ImGui::GetIO();
-  io.AddMousePosEvent(event.x, event.y);
-  bd->LastValidMousePos = ImVec2(event.x, event.y);
+  io.AddMousePosEvent(event->x, event->y);
+  bd->LastValidMousePos = ImVec2(event->x, event->y);
+  return PUGL_SUCCESS;
 }
 
-// Workaround: X11 seems to send spurious Leave/Enter events which would make us lose our position,
-// so we back it up and restore on Leave/Enter (see https://github.com/ocornut/imgui/issues/4984)
-void ImGui_ImplPugl_CrossingEventHandler2(PuglView* view, PuglCrossingEvent const& event) {
-  ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
+PuglStatus ImGui_ImplPugl_CrossingEventHandler(PuglView* /*view*/, PuglCrossingEvent const* event) {
+  if (!event) return PUGL_FAILURE;
   ImGuiIO& io = ImGui::GetIO();
-  if (event.type == PUGL_POINTER_IN) {
-    bd->MouseView = view;
-    io.AddMousePosEvent(bd->LastValidMousePos.x, bd->LastValidMousePos.y);
-  } else if (!event.type == PUGL_POINTER_IN && bd->MouseView == view) {
-    bd->LastValidMousePos = io.MousePos;
-    bd->MouseView = nullptr;
-    io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
-  }
-}
-
-void ImGui_ImplPugl_CrossingEventHandler(PuglView* /*view*/, PuglCrossingEvent const& event) {
-  ImGuiIO& io = ImGui::GetIO();
-  if (event.type == PUGL_POINTER_IN) {
-    io.AddMousePosEvent(event.x, event.y);
+  if (event->type == PUGL_POINTER_IN) {
+    io.AddMousePosEvent(event->x, event->y);
   } else {
     io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
   }
+  return PUGL_SUCCESS;
 }
 
-void ImGui_ImplPugl_TextEventHandler(PuglView* /*view*/, PuglTextEvent const& event) {
-    ImGuiIO& io = ImGui::GetIO();
-    io.AddInputCharacter(event.character);
+PuglStatus ImGui_ImplPugl_TextEventHandler(PuglView* /*view*/, PuglTextEvent const* event) {
+  if (!event) return PUGL_FAILURE;
+  ImGuiIO& io = ImGui::GetIO();
+  io.AddInputCharacter(event->character);
+  return PUGL_SUCCESS;
 }
 
 // void ImGui_ImplGlfw_MonitorCallback(GLFWmonitor*, int)
@@ -531,7 +592,7 @@ void ImGui_ImplPugl_Shutdown() {
 
   // if (bd->InstalledEventFunc) ImGui_ImplPugl_RestoreEventFunc(bd->View);
 
-  // FIXME TODO wtf needed?
+  // FIXME TODO wtf is that needed for?
   // for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_COUNT; cursor_n++)
   //     glfwDestroyCursor(bd->MouseCursors[cursor_n]);
 
@@ -656,94 +717,6 @@ void ImGui_ImplPugl_Shutdown() {
 //     #undef MAP_BUTTON
 //     #undef MAP_ANALOG
 // }
-
-PuglStatus ImGui_ImplPugl_EventHandler(PuglView* view, const PuglEvent* event) {
-  if (!event) return PUGL_FAILURE;  // just in case
-  // ImGui_ImplPugl_Data* bd = ImGui_ImplPugl_GetBackendData();
-  // if (bd->PrevEventFunc != nullptr && ImGui_ImplPugl_ShouldChainCallback(view)) {
-  //   auto status = bd->PrevEventFunc(view, event);
-  //   if (status != PUGL_SUCCESS) {
-  //     return status;
-  //   }
-  // }
-  switch (event->type) {
-    case PUGL_NOTHING:  ///< No event
-      // TODO : handle event
-      break;
-    case PUGL_REALIZE:  ///< View realized, a #PuglRealizeEvent
-      // TODO : handle event
-      break;
-    case PUGL_UNREALIZE:  ///< View unrealizeed, a #PuglUnrealizeEvent
-      // TODO : handle event
-      break;
-    case PUGL_CONFIGURE:  ///< View configured, a #PuglConfigureEvent
-      // TODO : handle event
-      break;
-    case PUGL_UPDATE:  ///< View ready to draw, a #PuglUpdateEvent
-      // TODO : handle event
-      break;
-    case PUGL_EXPOSE:  ///< View must be drawn, a #PuglExposeEvent
-      // TODO : handle event
-      break;
-    case PUGL_CLOSE:  ///< View will be closed, a #PuglCloseEvent
-      // TODO : handle event
-      break;
-    case PUGL_FOCUS_IN:  ///< Keyboard focus entered view, a #PuglFocusEvent
-      ImGui_ImplPugl_FocusEventHandler(view, event->focus);
-      break;
-    case PUGL_FOCUS_OUT:  ///< Keyboard focus left view, a #PuglFocusEvent
-      ImGui_ImplPugl_FocusEventHandler(view, event->focus);
-      break;
-    case PUGL_KEY_PRESS:  ///< Key pressed, a #PuglKeyEvent
-      ImGui_ImplPugl_KeyEventHandler(view, event->key);
-      break;
-    case PUGL_KEY_RELEASE:  ///< Key released, a #PuglKeyEvent
-      ImGui_ImplPugl_KeyEventHandler(view, event->key);
-      break;
-    case PUGL_TEXT:  ///< Character entered, a #PuglTextEvent
-      ImGui_ImplPugl_TextEventHandler(view, event->text);
-      break;
-    case PUGL_POINTER_IN:  ///< Pointer entered view, a #PuglCrossingEvent
-      ImGui_ImplPugl_CrossingEventHandler(view, event->crossing);
-      break;
-    case PUGL_POINTER_OUT:  ///< Pointer left view, a #PuglCrossingEvent
-      ImGui_ImplPugl_CrossingEventHandler(view, event->crossing);
-      break;
-    case PUGL_BUTTON_PRESS:  ///< Mouse button pressed, a #PuglButtonEvent
-      ImGui_ImplPugl_MouseButtonEventHandler(view, event->button);
-      break;
-    case PUGL_BUTTON_RELEASE:  ///< Mouse button released, a #PuglButtonEvent
-      ImGui_ImplPugl_MouseButtonEventHandler(view, event->button);
-      break;
-    case PUGL_MOTION:  ///< Pointer moved, a #PuglMotionEvent
-      ImGui_ImplPugl_MotionEventHandler(view, event->motion);
-      break;
-    case PUGL_SCROLL:  ///< Scrolled, a #PuglScrollEvent
-      ImGui_ImplPugl_ScrollEventHandler(view, event->scroll);
-      break;
-    case PUGL_CLIENT:  ///< Custom client message, a #PuglClientEvent
-      // TODO : handle event
-      break;
-    case PUGL_TIMER:  ///< Timer triggered, a #PuglTimerEvent
-      // TODO : handle event
-      break;
-    case PUGL_LOOP_ENTER:  ///< Recursive loop entered, a #PuglLoopEnterEvent
-      // TODO : handle event
-      break;
-    case PUGL_LOOP_LEAVE:  ///< Recursive loop left, a #PuglLoopLeaveEvent
-      // TODO : handle event
-      break;
-    case PUGL_DATA_OFFER:  ///< Data offered from clipboard, a #PuglDataOfferEvent
-      // TODO : handle event
-      break;
-    case PUGL_DATA:  ///< Data available from clipboard, a #PuglDataEvent
-      // TODO : handle event
-      break;
-    default:
-      break;
-  }
-  return PUGL_SUCCESS;
-}
 
 void ImGui_ImplPugl_NewFrame() {
   ImGuiIO& io = ImGui::GetIO();
