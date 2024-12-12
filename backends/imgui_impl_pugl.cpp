@@ -54,6 +54,17 @@
 #include <unistd.h>
 #endif
 
+// #define EN_LOG_TRACE
+#ifdef EN_LOG_TRACE
+#include <iostream>
+#define LOG_TRACE(msg)             \
+  do {                             \
+    std::cerr << msg << std::endl; \
+  } while (false)
+#else
+#define LOG_TRACE(msg)
+#endif
+
 // pugl
 #include <pugl/pugl.h>
 
@@ -78,6 +89,7 @@ static ImGui_ImplPugl_Data* ImGui_ImplPugl_GetBackendData() {
 }
 
 ImGuiKey ImGui_ImplPugl_KeyToImGuiKey(int keycode, int scancode) {
+  LOG_TRACE(__FUNCTION__ << " keycode: " << keycode << ", scancode: " << scancode);
   IM_UNUSED(scancode);
   switch (keycode) {
     case PUGL_KEY_TAB:
@@ -393,11 +405,17 @@ PuglStatus ImGui_ImplPugl_ScrollEventHandler(PuglView* /*view*/, PuglScrollEvent
 }
 
 PuglStatus ImGui_ImplPugl_KeyEventHandler(PuglView* /*view*/, PuglKeyEvent const* event) {
+  LOG_TRACE(__FUNCTION__ << ", event->type: " << event->type << ", event->flags: "
+                          << event->flags << ", event->time: " << event->time << ", event->x: " << event->x
+                          << ", event->y: " << event->y << ", event->xRoot: " << event->xRoot
+                          << ", event->yRoot: " << event->yRoot << ", event->state: " << event->state
+                          << ", event->keycode: " << event->keycode << ", event->key: " << event->key);
   if (!event) return PUGL_FAILURE;
   if (event->type == PUGL_KEY_PRESS || event->type == PUGL_KEY_RELEASE) {
     ImGui_ImplPugl_UpdateKeyModifiers(event->state);
     ImGuiIO& io = ImGui::GetIO();
     ImGuiKey imgui_key = ImGui_ImplPugl_KeyToImGuiKey(event->key, 0);
+    LOG_TRACE(__FUNCTION__ << " imgui_key: " << imgui_key);
     io.AddKeyEvent(imgui_key, (event->type == PUGL_KEY_PRESS));
     io.SetKeyEventNativeData(imgui_key, event->keycode, 0);  // To support legacy indexing (<1.87 user code)
   }
@@ -434,6 +452,11 @@ PuglStatus ImGui_ImplPugl_CrossingEventHandler(PuglView* /*view*/, PuglCrossingE
 }
 
 PuglStatus ImGui_ImplPugl_TextEventHandler(PuglView* /*view*/, PuglTextEvent const* event) {
+  LOG_TRACE(__FUNCTION__ << ", event->type: " << event->type << ", event->flags: " << event->flags
+                         << ", event->time: " << event->time << ", event->x: " << event->x << ", event->y: " << event->y
+                         << ", event->xRoot: " << event->xRoot << ", event->yRoot: " << event->yRoot
+                         << ", event->state: " << event->state << ", event->keycode: " << event->keycode
+                         << ", event->character: " << event->character << ", event->string: " << event->string);
   if (!event) return PUGL_FAILURE;
   ImGuiIO& io = ImGui::GetIO();
   io.AddInputCharacter(event->character);
