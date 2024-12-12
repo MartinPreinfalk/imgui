@@ -293,8 +293,9 @@ ImGuiKey ImGui_ImplPugl_KeyToImGuiKey(int keycode, int scancode) {
     case PUGL_KEY_F12:
       return ImGuiKey_F12;
     default:
-      return ImGuiKey_None;
+      break;
   }
+  return ImGuiKey_None;
 }
 
 static void ImGui_ImplPugl_UpdateKeyModifiers(PuglMods const& state) {
@@ -396,7 +397,7 @@ PuglStatus ImGui_ImplPugl_KeyEventHandler(PuglView* /*view*/, PuglKeyEvent const
   if (event->type == PUGL_KEY_PRESS || event->type == PUGL_KEY_RELEASE) {
     ImGui_ImplPugl_UpdateKeyModifiers(event->state);
     ImGuiIO& io = ImGui::GetIO();
-    ImGuiKey imgui_key = ImGui_ImplPugl_KeyToImGuiKey(event->keycode, 0);
+    ImGuiKey imgui_key = ImGui_ImplPugl_KeyToImGuiKey(event->key, 0);
     io.AddKeyEvent(imgui_key, (event->type == PUGL_KEY_PRESS));
     io.SetKeyEventNativeData(imgui_key, event->keycode, 0);  // To support legacy indexing (<1.87 user code)
   }
